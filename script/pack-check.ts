@@ -245,9 +245,16 @@ const THRESHOLDS = {
   // runtime. Measured packed 58644 B, unpacked 231210 B. Budgets bumped 58500 ->
   // 59000 and 229600 -> 231400, leaving ~356 B / ~190 B headroom. Files stay at
   // 17.
+  //
+  // Insert-mode jj escape: index.ts gains the rollback sequence detector plus
+  // the recording/undo fixups, settings.ts the insertEscape reader/resolver,
+  // and README the setting section plus the divergence row (README ships in
+  // the package files list, so its prose counts). Measured packed 60871 B,
+  // unpacked 239414 B. Budgets bumped 59000 -> 61200 and 231400 -> 239800,
+  // leaving ~329 B / ~386 B headroom. Files stay at 17.
   maxFiles: 17,
-  maxSize: 59000,
-  maxUnpackedSize: 231400,
+  maxSize: 61200,
+  maxUnpackedSize: 239800,
 } as const;
 
 function compareStrings(a: string, b: string): number {
