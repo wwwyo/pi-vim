@@ -1,9 +1,9 @@
-# pi-vim
+# @wwwyo/pi-vim
 
-Vim in Pi's prompt. Draft in INSERT, edit in NORMAL, select in VISUAL — and run `:!git status` from the middle of a prompt without losing a word of your draft.
+A personal fork of [pi-vim](https://github.com/lajarre/pi-vim) — Vim in Pi's prompt. Draft in INSERT, edit in NORMAL, select in VISUAL — and run `:!git status` from the middle of a prompt without losing a word of your draft.
 
 ```bash
-pi install npm:pi-vim
+pi install npm:@wwwyo/pi-vim
 ```
 
 Restart Pi after install; requires `@earendil-works/pi-tui >= 0.74.0`.
