@@ -728,12 +728,12 @@ describe("piVim insertEscape settings reader", () => {
 });
 
 describe("piVim insertEscape settings resolver", () => {
-  it("defaults to enabled with a 500ms window", () => {
+  it("defaults to enabled with a 150ms window", () => {
     const resolved = resolveInsertEscapeSettings(undefined);
 
     assert.deepEqual(resolved.settings, {
       enabled: true,
-      timeoutMs: 500,
+      timeoutMs: 150,
     });
     assert.deepEqual(resolved.settings, DEFAULT_INSERT_ESCAPE_SETTINGS);
     assert.equal(resolved.warning, undefined);
@@ -748,11 +748,11 @@ describe("piVim insertEscape settings resolver", () => {
   it("reads a bare boolean as the enabled flag", () => {
     assert.deepEqual(resolveInsertEscapeSettings(false).settings, {
       enabled: false,
-      timeoutMs: 500,
+      timeoutMs: 150,
     });
     assert.deepEqual(resolveInsertEscapeSettings(true).settings, {
       enabled: true,
-      timeoutMs: 500,
+      timeoutMs: 150,
     });
   });
 
@@ -761,7 +761,7 @@ describe("piVim insertEscape settings resolver", () => {
 
     assert.deepEqual(resolved.settings, {
       enabled: true,
-      timeoutMs: 500,
+      timeoutMs: 150,
     });
     assert.equal(resolved.warning, undefined);
   });
@@ -785,7 +785,7 @@ describe("piVim insertEscape settings resolver", () => {
 
       assert.deepEqual(resolved.settings, {
         enabled: true,
-        timeoutMs: 500,
+        timeoutMs: 150,
       });
       assert.equal(
         resolved.warning,
@@ -802,7 +802,7 @@ describe("piVim insertEscape settings resolver", () => {
 
     assert.deepEqual(resolved.settings, {
       enabled: true,
-      timeoutMs: 500,
+      timeoutMs: 150,
     });
     assert.equal(
       resolved.warning,
@@ -816,7 +816,7 @@ describe("piVim insertEscape settings resolver", () => {
 
       assert.deepEqual(resolved.settings, {
         enabled: true,
-        timeoutMs: 500,
+        timeoutMs: 150,
       });
       assert.ok(resolved.warning?.includes("timeoutMs"));
     }
@@ -830,7 +830,7 @@ describe("piVim insertEscape settings resolver", () => {
 
     assert.deepEqual(resolved.settings, {
       enabled: false,
-      timeoutMs: 500,
+      timeoutMs: 150,
     });
     assert.ok(resolved.warning?.includes("timeoutMs"));
   });

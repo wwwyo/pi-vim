@@ -62,7 +62,7 @@ export const DEFAULT_EX_COMMAND_SETTINGS: ExCommandSettings = {
 
 export const DEFAULT_INSERT_ESCAPE_SETTINGS: InsertEscapeSettings = {
   enabled: true,
-  timeoutMs: 500,
+  timeoutMs: 150,
 };
 
 const M = Symbol(),

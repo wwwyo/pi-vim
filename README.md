@@ -365,7 +365,7 @@ Default-equivalent `settings.json`:
     },
     "insertEscape": {
       "enabled": true,
-      "timeoutMs": 500
+      "timeoutMs": 150
     },
     "modeColors": {
       "insert": "borderMuted",
@@ -403,7 +403,7 @@ Default-equivalent `settings.json`:
 
 Typing `jj` fast in Insert mode leaves Insert for Normal, for typists who never want to reach for `Esc`. It is rollback-style, like Vim's `timeoutlen` for mapped keys: the first `j` inserts immediately with no input delay, and a second lone `j` within `timeoutMs` deletes both `j`s and lands exactly as `Esc` would — same cursor, one undo unit with the insert session (a later `u` never brings the `j`s back), and a `.` recording of the typed text without the escape letters. `Esc` / `Ctrl+[` keep working unchanged.
 
-`enabled`: `true` (the default) arms the sequence; `false` passes every `j` through. A bare boolean works too: `"insertEscape": false` switches it off. `timeoutMs`: the window in milliseconds (default `500`, Vim's own `timeoutlen` default is `1000`; `jj` gets a shorter window because it fires while typing prose, where a long window would swallow deliberate `jj`s). Only a lone `j` keypress counts — a bracketed paste containing `jj` inserts literally and never escapes. To type a literal `jj`, pause past the window between the two `j`s (there is no `<C-v>` quoted-insert in Pi, so timing is the only way).
+`enabled`: `true` (the default) arms the sequence; `false` passes every `j` through. A bare boolean works too: `"insertEscape": false` switches it off. `timeoutMs`: the window in milliseconds (default `150`: a fast `jj` lands well inside it, while a deliberate pause between two `j`s exceeds it. Vim's own `timeoutlen` default is `1000`, far too long for a mapping that fires while typing prose). Only a lone `j` keypress counts — a bracketed paste containing `jj` inserts literally and never escapes. To type a literal `jj`, pause past the window between the two `j`s (there is no `<C-v>` quoted-insert in Pi, so timing is the only way).
 
 ```json
 {
@@ -510,7 +510,7 @@ pi-vim does not bundle any such tool and does not care which one you use — any
 | Named registers / macros / search | Not implemented; the unnamed register is supported | Supported |
 | Ex commands | EX mini-mode quits (`:q`, `:qa`, `:quit`, `:qall`, `:quitall`, and their `!` forms), dispatches non-conflicting Pi slash commands (`:tree`, `:model opus`), and runs shell commands via `:!cmd`; vim ex semantics are reserved, not implemented | Full ex command-line surface |
 | Multi-line operators | `d/c/y` with `w/e/b`, `W/E/B`, `j/k`, and `G`; not the full Vim motion matrix | Rich cross-line semantics |
-| Insert `jj` escape | Fast `jj` leaves Insert for Normal (rollback-style, `insertEscape.timeoutMs`, default 500 ms); Neovim has no such mapping | No equivalent out of the box |
+| Insert `jj` escape | Fast `jj` leaves Insert for Normal (rollback-style, `insertEscape.timeoutMs`, default 150 ms); Neovim has no such mapping | No equivalent out of the box |
 
 ---
 
