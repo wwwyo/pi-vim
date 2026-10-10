@@ -17,6 +17,11 @@ export type ExCommandSettings = {
   copyInputToClipboard: boolean;
 };
 
+export type InsertEscapeSettings = {
+  enabled: boolean;
+  timeoutMs: number;
+};
+
 export type BorderSyncMode = boolean | "inherit";
 
 // Per-surface paint policy for a single mode:
@@ -36,6 +41,7 @@ export type PiVimSettings = {
   clipboardMirror?: unknown;
   exCommand?: unknown;
   globalExCommand?: unknown;
+  insertEscape?: unknown;
   modeColors?: ModeColorSettings;
   modeChange?: ModeChangeSettings;
   // Per-mode paint policy for Pi's input border. Default: every mode "host".
@@ -52,6 +58,11 @@ export type PiVimSettings = {
 export const DEFAULT_EX_COMMAND_SETTINGS: ExCommandSettings = {
   piDispatch: true,
   copyInputToClipboard: false,
+};
+
+export const DEFAULT_INSERT_ESCAPE_SETTINGS: InsertEscapeSettings = {
+  enabled: true,
+  timeoutMs: 300,
 };
 
 const M = Symbol(),
@@ -184,6 +195,50 @@ export function resolveExCommandSettings(
   };
 }
 
+export function readPiVimInsertEscapeSetting(g: unknown, p: unknown) {
+  // The escape only deletes text the user just typed in this prompt, so a
+  // project file may tune or switch it off (like exCommand.piDispatch).
+  let v = get(p, "insertEscape");
+  if (v !== M) return v;
+  v = get(g, "insertEscape");
+  return v === M ? undefined : v;
+}
+
+export function resolveInsertEscapeSettings(value: unknown): {
+  settings: InsertEscapeSettings;
+  warning?: string;
+} {
+  const settings = { ...DEFAULT_INSERT_ESCAPE_SETTINGS };
+  if (value === undefined) return { settings };
+  if (typeof value === "boolean") {
+    settings.enabled = value;
+    return { settings };
+  }
+  if (!rec(value)) {
+    return {
+      settings,
+      warning: "Invalid piVim.insertEscape; expected a boolean or an object.",
+    };
+  }
+  const invalid: string[] = [];
+  if (Object.hasOwn(value, "enabled")) {
+    const v = value.enabled;
+    if (typeof v === "boolean") settings.enabled = v;
+    else invalid.push("enabled");
+  }
+  if (Object.hasOwn(value, "timeoutMs")) {
+    const v = value.timeoutMs;
+    if (typeof v === "number" && Number.isFinite(v) && v >= 0)
+      settings.timeoutMs = v;
+    else invalid.push("timeoutMs");
+  }
+  if (!invalid[0]) return { settings };
+  return {
+    settings,
+    warning: `Invalid piVim.insertEscape ${invalid.join(", ")}; expected a boolean for enabled and a non-negative finite number for timeoutMs.`,
+  };
+}
+
 export function readPiVimModeColors(g: unknown, p: unknown) {
   const v = get(p, "modeColors");
   // Project settings are a whole-setting override. If a project checks in an
@@ -269,6 +324,7 @@ function disk(cwd: string): PiVimSettings {
     clipboardMirror: readPiVimClipboardMirrorSetting(g, p),
     exCommand: readPiVimExCommandSetting(g, p),
     globalExCommand: readPiVimGlobalExCommandSetting(g, p),
+    insertEscape: readPiVimInsertEscapeSetting(g, p),
     modeColors: readPiVimModeColors(g, p),
     modeChange: readPiVimModeChange(g, p),
     borderSync: readPiVimBorderSync(g, p),

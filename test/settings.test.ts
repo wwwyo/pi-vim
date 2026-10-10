@@ -3,15 +3,18 @@ import { describe, it } from "node:test";
 
 import {
   DEFAULT_EX_COMMAND_SETTINGS,
+  DEFAULT_INSERT_ESCAPE_SETTINGS,
   readPiVimBorderSync,
   readPiVimBorderSyncSetting,
   readPiVimClipboardMirrorSetting,
   readPiVimExCommandSetting,
   readPiVimGlobalExCommandSetting,
+  readPiVimInsertEscapeSetting,
   readPiVimLabelSync,
   readPiVimModeChange,
   readPiVimModeColors,
   resolveExCommandSettings,
+  resolveInsertEscapeSettings,
   resolveSurfaceSyncMaps,
   type SurfaceSyncMap,
 } from "../settings.js";
@@ -677,5 +680,158 @@ describe("piVim exCommand settings resolver", () => {
       resolved.warning,
       "Invalid piVim.exCommand copyInputToClipboard; expected a boolean.",
     );
+  });
+});
+
+describe("piVim insertEscape settings reader", () => {
+  it("returns undefined when global and project settings are missing", () => {
+    assert.equal(readPiVimInsertEscapeSetting(undefined, undefined), undefined);
+    assert.equal(
+      readPiVimInsertEscapeSetting({ piVim: {} }, { piVim: {} }),
+      undefined,
+    );
+  });
+
+  it("reads a global boolean when the project setting is missing", () => {
+    assert.equal(
+      readPiVimInsertEscapeSetting({ piVim: { insertEscape: false } }, {}),
+      false,
+    );
+  });
+
+  it("lets project piVim insertEscape override global", () => {
+    assert.equal(
+      readPiVimInsertEscapeSetting(
+        { piVim: { insertEscape: true } },
+        { piVim: { insertEscape: false } },
+      ),
+      false,
+    );
+    assert.deepEqual(
+      readPiVimInsertEscapeSetting(
+        { piVim: { insertEscape: false } },
+        { piVim: { insertEscape: { timeoutMs: 300 } } },
+      ),
+      { timeoutMs: 300 },
+    );
+  });
+
+  it("treats an invalid project insertEscape as an override instead of falling back to global", () => {
+    assert.equal(
+      readPiVimInsertEscapeSetting(
+        { piVim: { insertEscape: false } },
+        { piVim: { insertEscape: "off" } },
+      ),
+      "off",
+    );
+  });
+});
+
+describe("piVim insertEscape settings resolver", () => {
+  it("defaults to enabled with a 300ms window", () => {
+    const resolved = resolveInsertEscapeSettings(undefined);
+
+    assert.deepEqual(resolved.settings, {
+      enabled: true,
+      timeoutMs: 300,
+    });
+    assert.deepEqual(resolved.settings, DEFAULT_INSERT_ESCAPE_SETTINGS);
+    assert.equal(resolved.warning, undefined);
+  });
+
+  it("does not hand out the shared defaults object", () => {
+    const resolved = resolveInsertEscapeSettings(undefined);
+
+    assert.notEqual(resolved.settings, DEFAULT_INSERT_ESCAPE_SETTINGS);
+  });
+
+  it("reads a bare boolean as the enabled flag", () => {
+    assert.deepEqual(resolveInsertEscapeSettings(false).settings, {
+      enabled: false,
+      timeoutMs: 300,
+    });
+    assert.deepEqual(resolveInsertEscapeSettings(true).settings, {
+      enabled: true,
+      timeoutMs: 300,
+    });
+  });
+
+  it("reads an empty object as the defaults", () => {
+    const resolved = resolveInsertEscapeSettings({});
+
+    assert.deepEqual(resolved.settings, {
+      enabled: true,
+      timeoutMs: 300,
+    });
+    assert.equal(resolved.warning, undefined);
+  });
+
+  it("reads both object keys", () => {
+    const resolved = resolveInsertEscapeSettings({
+      enabled: false,
+      timeoutMs: 300,
+    });
+
+    assert.deepEqual(resolved.settings, {
+      enabled: false,
+      timeoutMs: 300,
+    });
+    assert.equal(resolved.warning, undefined);
+  });
+
+  it("warns and defaults when the value is neither a boolean nor an object", () => {
+    for (const value of ["off", 0, null, []]) {
+      const resolved = resolveInsertEscapeSettings(value);
+
+      assert.deepEqual(resolved.settings, {
+        enabled: true,
+        timeoutMs: 300,
+      });
+      assert.equal(
+        resolved.warning,
+        "Invalid piVim.insertEscape; expected a boolean or an object.",
+      );
+    }
+  });
+
+  it("warns per key and keeps the sibling default when a key is invalid", () => {
+    const resolved = resolveInsertEscapeSettings({
+      enabled: "no",
+      timeoutMs: -5,
+    });
+
+    assert.deepEqual(resolved.settings, {
+      enabled: true,
+      timeoutMs: 300,
+    });
+    assert.equal(
+      resolved.warning,
+      "Invalid piVim.insertEscape enabled, timeoutMs; expected a boolean for enabled and a non-negative finite number for timeoutMs.",
+    );
+  });
+
+  it("rejects non-finite timeoutMs values", () => {
+    for (const timeoutMs of [Number.NaN, Number.POSITIVE_INFINITY, "300"]) {
+      const resolved = resolveInsertEscapeSettings({ timeoutMs });
+
+      assert.deepEqual(resolved.settings, {
+        enabled: true,
+        timeoutMs: 300,
+      });
+      assert.ok(resolved.warning?.includes("timeoutMs"));
+    }
+  });
+
+  it("keeps a valid key when a sibling key is invalid", () => {
+    const resolved = resolveInsertEscapeSettings({
+      enabled: false,
+      timeoutMs: "fast",
+    });
+
+    assert.deepEqual(resolved.settings, {
+      enabled: false,
+      timeoutMs: 300,
+    });
+    assert.ok(resolved.warning?.includes("timeoutMs"));
   });
 });
